@@ -196,6 +196,8 @@ class RandomHouse(object):
     def walkaround_as_x_y(self, number, key):
         X = []
         y = []
+        if number not in self.walkaround_dict:
+            self.retrieve_walkaround(number)
         for i, (room_name, walkaround) in enumerate(self.walkaround_dict[number].items()):
             X.append(walkaround[key])
             y.append(np.ones(walkaround[key].shape[0], dtype=int)*i)
