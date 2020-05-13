@@ -82,8 +82,31 @@ class RandomHouse(object):
     >>> walkaround = house.retrieve_walkaround(number=0)
     >>> X_rssi, y = house.get_sensor_rssi(number=0)
     """
-    def __init__(self, n_rooms=7, largest_distance=40, min_distance=10,
-                 min_size=3, max_size=7, n_sensors=4, random_seed=None):
+    def __init__(self, n_rooms=None, largest_distance=None, min_distance=None,
+                 min_size=None, max_size=None, n_sensors=None,
+                 random_seed=None):
+        if random_seed is None:
+            random_seed = np.random.randint(0, 99999999)
+        if n_rooms is None:
+            np.random.seed(random_seed)
+            n_rooms = np.random.randint(4, 15)
+        if largest_distance is None:
+            np.random.seed(random_seed)
+            largest_distance = np.random.randint(15, 70)
+        if min_distance is None:
+            np.random.seed(random_seed)
+            min_distance = np.random.randint(3, 10)
+        if min_size is None:
+            np.random.seed(random_seed)
+            min_size = np.random.randint(2, 5)
+        if max_size is None:
+            np.random.seed(random_seed)
+            max_size = np.random.randint(min_size, 10)
+        if n_sensors is None:
+            np.random.seed(random_seed)
+            n_sensors = np.random.randint(int(np.ceil(n_rooms/2)),
+                                          n_rooms)
+
         self.n_rooms = n_rooms
         self.largest_distance = largest_distance
         self.random_seed = random_seed
