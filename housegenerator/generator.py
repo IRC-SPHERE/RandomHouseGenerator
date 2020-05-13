@@ -14,7 +14,7 @@ class RandomHouse(object):
     n_rooms : int, default=7
         Number of rooms
 
-    largest_distance : int, default=40
+    max_distance : int, default=40
         Maximum distance between different rooms
 
     min_distance : int, default=5
@@ -82,20 +82,44 @@ class RandomHouse(object):
     >>> walkaround = house.retrieve_walkaround(number=0)
     >>> X_rssi, y = house.get_sensor_rssi(number=0)
     """
-    def __init__(self, n_rooms=7, largest_distance=40, min_distance=10,
-                 min_size=3, max_size=7, n_sensors=4, random_seed=None):
+    def __init__(self, n_rooms=7, max_distance=40, min_distance=10,
+                 min_size=3, max_size=7, n_sensors=4, random_seed=None,
+                 room_names=None, sensor_locations=None, room_dimensions=None,
+                 distance_m=None, adjacency_m=None):
         self.n_rooms = n_rooms
-        self.largest_distance = largest_distance
+        self.max_distance = max_distance
         self.random_seed = random_seed
         self.n_sensors = n_sensors
         self.walkaround_dict = {}
 
-        self.room_names = self.generate_room_names()
-        self.sensor_locations = self.generate_sensor_locations()
+        if room_names is None:
+            self.room_names = self.generate_room_names()
+        else:
+            self.n_rooms = len(room_names)
+            self.room_names = room_names
+
+        if sensor_locations is None:
+            self.sensor_locations = self.generate_sensor_locations()
+        else:
+            self.sensor_locations = sensor_locations
+            self.n_sensors = len(sensor_locations)
+
+        if room_dimensions is None:
+            self.room_dimensions = self.generate_room_dimensions(min_size, max_size)
+        else:
+            self.room_dimensions = room_dimensions
+
+        if distance_m is None:
+            self.distance_m = self.generate_distance_matrix()
+        else:
+            self.distance_m = distance_m
+
+        if adjacency_m is None:
+            self.adjacency_m = self.distance_m <= min_distance
+        else:
+            self.adjacency_m = adjacency_m
+
         self.sensor_constant_loss = self.generate_sensor_constant_losses()
-        self.room_dimensions = self.generate_room_dimensions(min_size, max_size)
-        self.distance_m = self.generate_distance_matrix()
-        self.adjacency_m = self.distance_m <= min_distance
         self.walls_loss_m = self.generate_walls_loss_matrix()
 
 
@@ -131,11 +155,11 @@ class RandomHouse(object):
 
     def generate_sensor_constant_losses(self):
         np.random.seed(self.random_seed)
-        return np.random.randint(2, 10, self.n_sensors)
+        return np.random.randint(25, 35, self.n_sensors)
 
     def generate_distance_matrix(self):
         np.random.seed(self.random_seed)
-        distance_m = np.triu(np.random.randint(1, self.largest_distance,
+        distance_m = np.triu(np.random.randint(1, self.max_distance,
                                                size=(self.n_rooms, self.n_rooms)), +1)
         i_lower = np.tril_indices(self.n_rooms, -1)
         distance_m[i_lower] = distance_m.T[i_lower]
@@ -143,7 +167,7 @@ class RandomHouse(object):
 
     def generate_walls_loss_matrix(self):
         np.random.seed(self.random_seed)
-        walls_m = np.triu(np.random.randint(2, 12,
+        walls_m = np.triu(np.random.randint(5, 20,
                                             size=(self.n_rooms, self.n_rooms)), +1)
         i_lower = np.tril_indices(self.n_rooms, -1)
         walls_m[i_lower] = walls_m.T[i_lower]
@@ -181,14 +205,14 @@ class RandomHouse(object):
 
     def get_sensor_rssi(self, number, key='path', min_value=-120):
         def path_loss_model(distances, environment_loss, system_loss):
-            return -10*environment_loss*np.log10(distances) - system_loss
+            return -10*environment_loss*np.log10(distances+1) - system_loss
 
         X_dist, y = self.get_sensor_distances(number, key)
         X_rssi = []
         for i in range(self.n_sensors):
             if self.random_seed is not None:
                 np.random.seed(self.random_seed+i)
-            environment_loss = np.abs(np.random.randn(X_dist.shape[0]))*3 + self.walls_loss_m[i, y]
+            environment_loss = np.abs(np.random.randn(X_dist.shape[0]))*7 + self.walls_loss_m[i, y]
             current_rssi = path_loss_model(X_dist[:,i], environment_loss,
                                            self.sensor_constant_loss[i])
             current_rssi[current_rssi < -np.random.randint(50, -min_value)] = np.nan
