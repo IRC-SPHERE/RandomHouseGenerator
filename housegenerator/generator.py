@@ -102,7 +102,7 @@ class RandomHouse(object):
             min_size = np.random.randint(2, 5)
         if max_size is None:
             np.random.seed(random_seed)
-            max_size = np.random.randint(min_size, 10)
+            max_size = np.random.randint(min_size+1, 10)
         if n_sensors is None:
             np.random.seed(random_seed)
             n_sensors = np.random.randint(int(np.ceil(n_rooms/2)),
