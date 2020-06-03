@@ -11,22 +11,22 @@ class RandomHouse(object):
 
     Parameters
     ----------
-    n_rooms : int, default=7
+    n_rooms : int
         Number of rooms
 
-    max_distance : int, default=30
+    max_distance : int
         Maximum distance between different rooms
 
-    min_distance : int, default=5
+    min_distance : int
         Minimum distance between different rooms
 
-    min_size : int, default=3
+    min_size : int
         Minimum width/lenght of a room
 
-    max_size : int, default=7
+    max_size : int
         Maximum width/lenght of a room
 
-    n_sensors : int, default=4
+    n_sensors : int
         Number of sensors (must be smaller than number of rooms)
 
     random_seed : int or None
@@ -93,10 +93,10 @@ class RandomHouse(object):
             n_rooms = np.random.randint(4, 15)
         if max_distance is None:
             np.random.seed(random_seed)
-            max_distance = np.random.randint(15, 30)
+            max_distance = np.random.randint(5, 16)
         if min_distance is None:
             np.random.seed(random_seed)
-            min_distance = np.random.randint(3, 10)
+            min_distance = np.random.randint(1, 5)
         if min_size is None:
             np.random.seed(random_seed)
             min_size = np.random.randint(2, 5)
@@ -195,7 +195,7 @@ class RandomHouse(object):
 
     def generate_walls_loss_matrix(self):
         np.random.seed(self.random_seed)
-        walls_m = np.triu(np.random.randint(2, 8,
+        walls_m = np.triu(np.random.randint(1, 3,
                                             size=(self.n_rooms, self.n_rooms)), +1)
         i_lower = np.tril_indices(self.n_rooms, -1)
         walls_m[i_lower] = walls_m.T[i_lower]
@@ -242,7 +242,7 @@ class RandomHouse(object):
         for i, idx in enumerate(self.sensor_location_idx):
             if self.random_seed is not None:
                 np.random.seed(self.random_seed+i)
-            environment_loss = np.abs(np.random.randn(X_dist.shape[0])) \
+            environment_loss = np.abs(np.random.randn(X_dist.shape[0]))*2 \
                     + self.walls_loss_m[idx, y]
             current_rssi = path_loss_model(X_dist[:,i], environment_loss,
                                            self.sensor_constant_loss[i])
