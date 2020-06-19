@@ -118,12 +118,12 @@ class RandomHouse(object):
             self.room_names = self.generate_room_names()
         else:
             self.n_rooms = len(room_names)
-            self.room_names = room_names
+            self.room_names = np.array(room_names)
 
         if sensor_locations is None:
             self.sensor_location_idx = self.generate_sensor_location_idx()
         else:
-            location_idx = [np.where(self.room_names == location)[0] for
+            location_idx = [np.where(self.room_names == location)[0][0] for
                             location in sensor_locations]
             self.sensor_location_idx = np.array(location_idx)
             self.n_sensors = len(sensor_locations)
