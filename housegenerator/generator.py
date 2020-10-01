@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.sparse.csgraph import minimum_spanning_tree
 
 class RandomHouse(object):
     """Random house generator
@@ -16,9 +17,6 @@ class RandomHouse(object):
 
     max_distance : int
         Maximum distance between different rooms
-
-    min_distance : int
-        Minimum distance between different rooms
 
     min_size : int
         Minimum width/lenght of a room
@@ -82,10 +80,10 @@ class RandomHouse(object):
     >>> walkaround = house.retrieve_walkaround(number=0)
     >>> X_rssi, y = house.get_sensor_rssi(number=0)
     """
-    def __init__(self, n_rooms=None, max_distance=None, min_distance=None,
-                 min_size=None, max_size=None, n_sensors=None,
-                 random_seed=None, room_names=None, sensor_locations=None,
-                 room_dimensions=None, distance_m=None, adjacency_m=None):
+    def __init__(self, n_rooms=None, max_distance=None, min_size=None,
+                 max_size=None, n_sensors=None, random_seed=None,
+                 room_names=None, sensor_locations=None, room_dimensions=None,
+                 distance_m=None, adjacency_m=None):
         if random_seed is None:
             random_seed = np.random.randint(0, 99999999)
         if n_rooms is None:
@@ -94,9 +92,6 @@ class RandomHouse(object):
         if max_distance is None:
             np.random.seed(random_seed)
             max_distance = np.random.randint(5, 16)
-        if min_distance is None:
-            np.random.seed(random_seed)
-            min_distance = np.random.randint(1, 5)
         if min_size is None:
             np.random.seed(random_seed)
             min_size = np.random.randint(2, 5)
@@ -139,7 +134,8 @@ class RandomHouse(object):
             self.distance_m = distance_m
 
         if adjacency_m is None:
-            self.adjacency_m = self.distance_m <= min_distance
+            self.adjacency_m = minimum_spanning_tree(
+                self.distance_m).toarray().astype(bool) + np.eye(self.n_rooms)
         else:
             self.adjacency_m = adjacency_m
 
